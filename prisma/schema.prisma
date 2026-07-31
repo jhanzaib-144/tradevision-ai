@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserPlan {
+  FREE
+  PREMIUM
+  VIP
+}
+
+enum TradeSignal {
+  BUY
+  SELL
+  WAIT
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+
+  role           UserRole @default(USER)
+  plan           UserPlan @default(FREE)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  trades         Trade[]
+  signals        Signal[]
+  alerts         AlertSetting?
+}
+
+model Signal {
+
+  id             String @id @default(cuid())
+
+  userId         String
+  user           User @relation(fields: [userId], references: [id])
+
+  symbol         String
+
+  signal         TradeSignal
+
+  confidence     Int
+
+  entry          Float
+
+  stopLoss       Float
+
+  takeProfit1    Float
+
+  takeProfit2    Float
+
+  decision       String
+
+  reason         String
+
+  risk           String
+
+  createdAt      DateTime @default(now())
+
+}
+
+model Trade {
+
+  id             String @id @default(cuid())
+
+  userId         String
+  user           User @relation(fields: [userId], references: [id])
+
+  symbol         String
+
+  entry          Float
+
+  exit           Float?
+
+  profit         Float?
+
+  status         TradeStatus @default(OPEN)
+
+  createdAt      DateTime @default(now())
+
+}
+
+model AlertSetting {
+
+  id                 String @id @default(cuid())
+
+  userId             String @unique
+
+  user               User @relation(fields: [userId], references: [id])
+
+  telegramEnabled    Boolean @default(false)
+
+  whatsappEnabled    Boolean @default(false)
+
+  emailEnabled       Boolean @default(false)
+
+}
